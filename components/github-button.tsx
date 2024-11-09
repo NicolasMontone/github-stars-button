@@ -72,7 +72,7 @@ export default function GithubButton({ count }: { count?: number }) {
               ref={starRef}
               className="w-5 h-5 text-white group-hover:text-yellow-400 transition-all duration-300"
             />
-            <div>{count ? count : '-'}</div>
+            <div>{count ? count.toLocaleString() : '-'}</div>
           </div>
         </div>
         <div
