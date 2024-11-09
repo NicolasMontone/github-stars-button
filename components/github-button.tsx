@@ -1,23 +1,49 @@
 'use client'
 
 import { Star } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 import GithubIcon from './github-icon'
 import { REPO_NAME } from '@/lib/constants'
 
 export default function GithubButton({ count }: { count?: number }) {
   const [isAnimating, setIsAnimating] = useState(false)
+  const [starPosition, setStarPosition] = useState({ x: 0, y: 0 })
+  const [starOpacity, setStarOpacity] = useState(1)
+  const starRef = useRef<SVGSVGElement>(null)
+
+  useEffect(() => {
+    if (isAnimating) {
+      const startTime = Date.now()
+      let animationFrame: number
+
+      const animate = () => {
+        const elapsedTime = Date.now() - startTime
+        const progress = Math.min(elapsedTime / 1000, 1)
+
+        const newX = Math.sin(progress * Math.PI * 2) * 20
+        const newY = -progress * 50
+
+        setStarPosition({ x: newX, y: newY })
+        setStarOpacity(1 - progress)
+
+        if (progress < 1) {
+          animationFrame = requestAnimationFrame(animate)
+        } else {
+          setIsAnimating(false)
+          window.open(`https://github.com/${REPO_NAME}`, '_blank')
+        }
+      }
+
+      animationFrame = requestAnimationFrame(animate)
+
+      return () => cancelAnimationFrame(animationFrame)
+    }
+  }, [isAnimating])
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault()
     setIsAnimating(true)
-
-    // Wait for animation to complete before opening link
-    setTimeout(() => {
-      window.open(`https://github.com/${REPO_NAME}`, '_blank')
-      setIsAnimating(false)
-    }, 600) // Match this with animation duration
   }
 
   return (
@@ -34,7 +60,7 @@ export default function GithubButton({ count }: { count?: number }) {
           transition-all duration-300 ease-out
           hover:shadow-lg
           text-white font-medium
-          `}
+        `}
       >
         <div className="relative z-10 flex items-center space-x-3">
           <div className="flex items-center space-x-2">
@@ -43,12 +69,8 @@ export default function GithubButton({ count }: { count?: number }) {
           </div>
           <div className="flex items-center space-x-2">
             <Star
-              className={`
-                w-5 h-5 text-white 
-                group-hover:text-yellow-400 
-                transition-all duration-300
-                ${isAnimating ? 'scale-150 rotate-180 text-yellow-400' : ''}
-              `}
+              ref={starRef}
+              className="w-5 h-5 text-white group-hover:text-yellow-400 transition-all duration-300"
             />
             <div>{count ? count : '-'}</div>
           </div>
@@ -60,9 +82,23 @@ export default function GithubButton({ count }: { count?: number }) {
             opacity-20 
             transform -translate-x-full group-hover:translate-x-full
             transition-transform duration-1000 ease-out
-            `}
+          `}
         />
       </button>
+      {isAnimating && (
+        <div
+          className="absolute"
+          style={{
+            transform: `translate(${starPosition.x}px, ${starPosition.y}px)`,
+            opacity: starOpacity,
+            transition: 'opacity 0.3s ease-out',
+            left: `${starRef.current?.getBoundingClientRect().x}px`,
+            top: `${starRef.current?.getBoundingClientRect().y}px`,
+          }}
+        >
+          <Star className="w-6 h-6 text-yellow-400 fill-yellow-400" />
+        </div>
+      )}
     </a>
   )
 }
