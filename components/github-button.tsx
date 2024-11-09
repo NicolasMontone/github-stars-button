@@ -19,7 +19,7 @@ export default function GithubButton({ count }: { count?: number }) {
 
       const animate = () => {
         const elapsedTime = Date.now() - startTime
-        const progress = Math.min(elapsedTime / 1000, 1)
+        const progress = Math.min(elapsedTime / 600, 1)
 
         const newX = Math.sin(progress * Math.PI * 2) * 20
         const newY = -progress * 50
